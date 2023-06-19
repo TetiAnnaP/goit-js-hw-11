@@ -3,12 +3,10 @@
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import Notiflix from 'notiflix';
-
 import { getRequest, createMarkUp } from './partials/galery_api';
 
 const formEl = document.querySelector('.search-form');
 const inputEl = document.querySelector('[name="searchQuery"]');
-// const buttonEl = document.querySelector('[type="submit"]');
 const galleryEl = document.querySelector('.gallery');
 const loadMoreBtnEl = document.querySelector('.load-more');
 
@@ -19,17 +17,17 @@ loadMoreBtnEl.addEventListener('click', onClick);
 
 let curentPage = 1;
 let totalHits = 0;
-totalHits = getRequest(`${inputEl.value}`, curentPage).then(data => {
-  totalHits = data.totalHits;
-  return totalHits;
-});
 
 function onSubmit(e) {
-  if (inputEl.value === '') {
-    return alert('Введи что-то нормальное!');
-  }
-
   e.preventDefault();
+  if (inputEl.value === '') {
+    Notiflix.Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.',
+      { timeout: 3000 }
+    );
+    return;
+  }
+  totalHits = counterTotalHits();
   curentPage = 1;
   getRequestByUserText();
   loadMoreBtnEl.classList.remove('hidden');
@@ -39,6 +37,7 @@ function onClick(e) {
   e.preventDefault();
   curentPage += 1;
   totalHits -= 40;
+
   getRequestByUserText();
 }
 
@@ -66,14 +65,30 @@ function getRequestByUserText() {
       lightbox.refresh();
 
       if (totalHits < 40) {
-        console.log(
-          "We're sorry, but you've reached the end of search results."
+        Notiflix.Notify.failure(
+          "We're sorry, but you've reached the end of search results.",
+          { timeout: 3000 }
         );
+
         loadMoreBtnEl.classList.add('hidden');
+        return;
       }
     })
     .catch(error => {
-      console.log(
+      Notiflix.Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+    });
+}
+
+function counterTotalHits() {
+  getRequest(`${inputEl.value}`, curentPage)
+    .then(data => {
+      totalHits = data.totalHits;
+      return totalHits;
+    })
+    .catch(error => {
+      Notiflix.Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
     });
